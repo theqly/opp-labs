@@ -20,9 +20,8 @@ long long int find_s(const int* a, const int* b, const int N) {
     return s;
 }
 
-int main(int argc, char** argv) {
+int main() {
     srand(time(NULL));
-
     int N;
     scanf("%i", &N);
     int* a = get_random_vector(N);
