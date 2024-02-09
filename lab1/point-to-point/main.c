@@ -58,14 +58,14 @@ int main(int argc, char** argv) {
         s = find_s(a, b, size_of_block);
 
         for(size_t i = 1; i < size; ++i) {
-            MPI_Recv(&tmp, 1, MPI_LONG_LONG_INT, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&tmp, 1, MPI_LONG_LONG_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             s += tmp;
         }
     } else {
         MPI_Recv(a + size_of_block*rank, size_of_block, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(b, N, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         tmp = find_s(a + size_of_block*rank, b, size_of_block);
-        MPI_Send(&tmp, 1, MPI_LONG_LONG_INT, 0, 1, MPI_COMM_WORLD);
+        MPI_Send(&tmp, 1, MPI_LONG_LONG_INT, 0, 2, MPI_COMM_WORLD);
     }
 
     if(rank == 0) {
