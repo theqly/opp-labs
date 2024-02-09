@@ -2,19 +2,23 @@
 #include "stdlib.h"
 #include "time.h"
 
-int* get_random_vector(const int N) {
-    int* vector = malloc(sizeof(int) * N);
-    for(size_t i = 0; i < N; ++i) {
-        vector[i] = rand() % N;
+#define N 99984
+
+void fill_vector(int* vector, const int size) {
+    if(vector != NULL) {
+        for(size_t i = 0; i < size; ++i) {
+            vector[i] = i;
+        }
     }
-    return vector;
 }
 
-long long int find_s(const int* a, const int* b, const int N) {
+long long int find_s(const int* a, const int* b, const int size) {
     long long int s = 0;
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < N; ++j) {
-            s += a[i]*b[j];
+    if(a != NULL && b != NULL) {
+        for(size_t i = 0; i < size; ++i) {
+            for(size_t j = 0; j < N; ++j) {
+                s += a[i]*b[j];
+            }
         }
     }
     return s;
@@ -22,11 +26,10 @@ long long int find_s(const int* a, const int* b, const int N) {
 
 int main() {
     srand(time(NULL));
-    int N;
-    scanf("%i", &N);
-    int* a = get_random_vector(N);
-    int* b = get_random_vector(N);
-
+    int* a = malloc(sizeof(int) * N);
+    int* b = malloc(sizeof(int) * N);
+    fill_vector(a, N);
+    fill_vector(b, N);
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     const long long int s = find_s(a, b, N);

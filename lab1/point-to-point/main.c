@@ -3,43 +3,81 @@
 #include "time.h"
 #include "mpi.h"
 
-int* get_random_vector(const int N) {
-    int* vector = malloc(sizeof(int) * N);
-    for(size_t i = 0; i < N; ++i) {
-        vector[i] = rand() % N;
+#define N 99984
+
+void fill_vector(int* vector, const int size) {
+    if(vector != NULL) {
+        for(size_t i = 0; i < size; ++i) {
+            vector[i] = i;
+        }
     }
-    return vector;
 }
 
-long long int find_s(const int* a, const int* b, const int N) {
+long long int find_s(const int* a, const int* b, const int size) {
     long long int s = 0;
-    for(size_t i = 0; i < N; ++i) {
-        for(size_t j = 0; j < N; ++j) {
-            s += a[i]*b[j];
+    if(a != NULL && b != NULL) {
+        for(size_t i = 0; i < size; ++i) {
+            for(size_t j = 0; j < N; ++j) {
+                s += a[i]*b[j];
+            }
         }
     }
     return s;
 }
 
 int main(int argc, char** argv) {
-    /*srand(time(NULL));
-    int N;
-    scanf("%i", &N);
-    int* a = get_random_vector(N);
-    int* b = get_random_vector(N);
+    srand(time(NULL));
 
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-    const long long int s = find_s(a, b, N);
-    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-    printf("Time taken: %lf sec.\n", end.tv_sec-start.tv_sec + 0.000000001*(end.tv_nsec-start.tv_nsec));
-    printf("s is: %lld\n", s);
-    free(a);
-    free(b);*/
-    printf("before MPI_Init");
+    int size, rank;
+
     MPI_Init(&argc, &argv);
-    printf("MPI inited");
+    MPI_Comm_size(MPI_COMM_WORLD,  &size);
+    MPI_Comm_rank(MPI_COMM_WORLD,  &rank);
+
+    const int size_of_block = N / size;
+
+    int* a = malloc(sizeof(int) * N);
+    int* b = malloc(sizeof(int) * N);
+
+    long long int s, tmp;
+
+    double start, end;
+
+    if(rank == 0) {
+
+        fill_vector(a, N);
+        fill_vector(b, N);
+
+        start = MPI_Wtime();
+
+        for(size_t i = 1; i < size; ++i) {
+            MPI_Send(a + size_of_block*i, size_of_block, MPI_INT, i, 1, MPI_COMM_WORLD);
+            MPI_Send(b, N, MPI_INT, i, 1, MPI_COMM_WORLD);
+        }
+
+        s = find_s(a, b, size_of_block);
+
+        for(size_t i = 1; i < size; ++i) {
+            MPI_Recv(&tmp, 1, MPI_LONG_LONG_INT, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            s += tmp;
+        }
+    } else {
+        MPI_Recv(a + size_of_block*rank, size_of_block, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(b, N, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        tmp = find_s(a + size_of_block*rank, b, size_of_block);
+        MPI_Send(&tmp, 1, MPI_LONG_LONG_INT, 0, 1, MPI_COMM_WORLD);
+    }
+
+    if(rank == 0) {
+        end = MPI_Wtime();
+        printf("Time taken: %lf sec.\n", end - start);
+        printf("s is: %lld\n", s);
+    }
+
+    free(a);
+    free(b);
+
     MPI_Finalize();
-    printf("after MPI_Finalize");
+
     return 0;
 }
