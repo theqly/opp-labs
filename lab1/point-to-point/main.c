@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "time.h"
+#include "mpi.h"
 
 int* get_random_vector(const int N) {
     int* vector = malloc(sizeof(int) * N);
@@ -20,8 +21,8 @@ long long int find_s(const int* a, const int* b, const int N) {
     return s;
 }
 
-int main() {
-    srand(time(NULL));
+int main(int argc, char** argv) {
+    /*srand(time(NULL));
     int N;
     scanf("%i", &N);
     int* a = get_random_vector(N);
@@ -34,6 +35,11 @@ int main() {
     printf("Time taken: %lf sec.\n", end.tv_sec-start.tv_sec + 0.000000001*(end.tv_nsec-start.tv_nsec));
     printf("s is: %lld\n", s);
     free(a);
-    free(b);
+    free(b);*/
+    printf("before MPI_Init");
+    MPI_Init(&argc, &argv);
+    printf("MPI inited");
+    MPI_Finalize();
+    printf("after MPI_Finalize");
     return 0;
 }
