@@ -25,7 +25,10 @@ long long int find_s(const int* a, const int* b, const int size) {
     return s;
 }
 
-int main() {
+int main(int argc, char** argv) {
+
+    MPI_Init(&argc, &argv);
+
     int* a = malloc(sizeof(int) * N);
     int* b = malloc(sizeof(int) * N);
     double start = MPI_Wtime();
@@ -36,5 +39,8 @@ int main() {
     printf("s is: %lld\n", s);
     free(a);
     free(b);
+
+    MPI_Finalize();
+
     return 0;
 }
