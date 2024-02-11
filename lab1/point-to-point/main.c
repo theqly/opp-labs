@@ -5,10 +5,11 @@
 
 #define N 99984
 
-void fill_vector(int* vector, const int size) {
-    if(vector != NULL) {
+void fill_vectors(int* a, int* b, const int size) {
+    if(a != NULL && b != NULL) {
         for(size_t i = 0; i < size; ++i) {
-            vector[i] = i;
+            a[i] = i;
+            b[i] = i;
         }
     }
 }
@@ -26,7 +27,6 @@ long long int find_s(const int* a, const int* b, const int size) {
 }
 
 int main(int argc, char** argv) {
-    srand(time(NULL));
 
     int size, rank;
 
@@ -45,10 +45,9 @@ int main(int argc, char** argv) {
 
     if(rank == 0) {
 
-        fill_vector(a, N);
-        fill_vector(b, N);
-
         start = MPI_Wtime();
+
+        fill_vectors(a, b, N);
 
         for(size_t i = 1; i < size; ++i) {
             MPI_Send(a + size_of_block*i, size_of_block, MPI_INT, i, 1, MPI_COMM_WORLD);
