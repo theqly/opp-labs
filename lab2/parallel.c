@@ -79,8 +79,8 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    int size_of_block = n / size;
-    int size_of_matrix_block = (n * n) / size;
+    const int size_of_block = n / size;
+    const int size_of_matrix_block = (n * n) / size;
 
     double* a;
     double* b;
@@ -140,14 +140,13 @@ int main(int argc, char** argv) {
         mul_vec_on_scalar(tmp1, aplha, tmp2, size_of_block);
         vector_sub(r, tmp2, r, size_of_block);
 
-        double r_norm = 0;
         double new_scalar_of_r = 0;
         double new_local_scalar_of_r = scalar_mul(r, r, size_of_block);
-        MPI_Reduce(&new_local_scalar_of_r, &new_scalar_of_r, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Allreduce(&new_local_scalar_of_r, &new_scalar_of_r, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         double condition = 0;
         if(rank == 0) {
-            r_norm = sqrt(new_scalar_of_r);
+            const double r_norm = sqrt(new_scalar_of_r);
             //printf("r norm=%lf\n", r_norm);
             condition = r_norm / b_norm;
         }
@@ -156,8 +155,10 @@ int main(int argc, char** argv) {
         if(condition < e) {
             match++;
             if(match == 3) {
-                printf("done on i=%d\n", i);
-                printf("condition=%lf\n", condition);
+                if(rank == 0) {
+                    printf("done on i=%d\n", i);
+                    printf("condition=%lf\n", condition);
+                }
                 break;
             }
         } else match = 0;
@@ -168,17 +169,13 @@ int main(int argc, char** argv) {
         vector_sum(r, tmp1, z + size_of_block*rank, size_of_block);
 
         //самый невероятный костыль
-        /*double* local_x = malloc(sizeof(double) * size_of_block);
         double* local_z = malloc(sizeof(double) * size_of_block);
-        memcpy(local_x, x + size_of_block*rank, size_of_block * sizeof(double));
         memcpy(local_z, z + size_of_block*rank, size_of_block * sizeof(double));
-        MPI_Allgather(local_x, size_of_block, MPI_DOUBLE, x, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
         MPI_Allgather(local_z, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
-        free(local_x);
-        free(local_z);*/
-        MPI_Allgather(x + size_of_block*rank, size_of_block, MPI_DOUBLE, x, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
-        MPI_Allgather(z + size_of_block*rank, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
+        free(local_z);
+        //MPI_Allgather(z + size_of_block*rank, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
     }
+
 
     if(rank == 0) {
         if(match < 3) printf("doesnt working\n");
