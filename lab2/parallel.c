@@ -58,7 +58,7 @@ void filling(double* a, double* b, double* x, const int n) {
         b[i] = n + 1;
     }
 
-    double* u = malloc(sizeof(double) * n);
+    double* u = (double*)malloc(sizeof(double) * n);
 
     for(int i = 0; i < n; ++i) {
         u[i] = sin(2 * M_PI * i / n);
@@ -85,19 +85,19 @@ int main(int argc, char** argv) {
     double* a;
     double* b;
 
-    double* local_a = malloc(sizeof(double) * size_of_matrix_block);
-    double* local_b = malloc(sizeof(double) * size_of_block);
+    double* local_a = (double*)malloc(sizeof(double) * size_of_matrix_block);
+    double* local_b = (double*)malloc(sizeof(double) * size_of_block);
 
-    double* x = malloc(sizeof(double) * n);
-    double* r = malloc(sizeof(double) * size_of_block);
-    double* z = malloc(sizeof(double) * n);
+    double* x = (double*)malloc(sizeof(double) * n);
+    double* r = (double*)malloc(sizeof(double) * size_of_block);
+    double* z = (double*)malloc(sizeof(double) * n);
 
-    double* tmp1 = malloc(sizeof(double) * size_of_block);
-    double* tmp2 = malloc(sizeof(double) * size_of_block);
+    double* tmp1 = (double*)malloc(sizeof(double) * size_of_block);
+    double* tmp2 = (double*)malloc(sizeof(double) * size_of_block);
 
     if(rank == 0) {
-        a = malloc(sizeof(double) * n * n);
-        b = malloc(sizeof(double) * n);
+        a = (double*)malloc(sizeof(double) * n * n);
+        b = (double*)malloc(sizeof(double) * n);
         filling(a, b, x, n);
         start = MPI_Wtime();
     }
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
         vector_sum(r, tmp1, z + size_of_block*rank, size_of_block);
 
         //самый невероятный костыль
-        double* local_z = malloc(sizeof(double) * size_of_block);
+        double* local_z = (double*)malloc(sizeof(double) * size_of_block);
         memcpy(local_z, z + size_of_block*rank, size_of_block * sizeof(double));
         MPI_Allgather(local_z, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
         free(local_z);
