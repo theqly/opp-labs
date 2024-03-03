@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
     double start;
     const double e = 0.00001;
-    const int n = 6144;
+    const int n = 11520;
 
     int rank, size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -91,6 +91,8 @@ int main(int argc, char** argv) {
     double* x = (double*)malloc(sizeof(double) * n);
     double* r = (double*)malloc(sizeof(double) * size_of_block);
     double* z = (double*)malloc(sizeof(double) * n);
+
+    double* local_z = (double*)malloc(sizeof(double) * size_of_block);
 
     double* tmp1 = (double*)malloc(sizeof(double) * size_of_block);
     double* tmp2 = (double*)malloc(sizeof(double) * size_of_block);
@@ -166,14 +168,9 @@ int main(int argc, char** argv) {
         double beta = new_scalar_of_r / scalar_of_r;
 
         mul_vec_on_scalar(z + size_of_block*rank, beta, tmp1, size_of_block);
-        vector_sum(r, tmp1, z + size_of_block*rank, size_of_block);
+        vector_sum(r, tmp1, local_z, size_of_block);
 
-        //самый невероятный костыль
-        double* local_z = (double*)malloc(sizeof(double) * size_of_block);
-        memcpy(local_z, z + size_of_block*rank, size_of_block * sizeof(double));
         MPI_Allgather(local_z, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
-        free(local_z);
-        //MPI_Allgather(z + size_of_block*rank, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
     }
 
 
@@ -192,6 +189,8 @@ int main(int argc, char** argv) {
     free(x);
     free(r);
     free(z);
+
+    free(local_z);
 
     free(tmp1);
     free(tmp2);
