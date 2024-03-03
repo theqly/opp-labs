@@ -110,23 +110,17 @@ int main(int argc, char** argv) {
     double local_b_norm = scalar_mul(local_b, local_b, size_of_block);
     MPI_Reduce(&local_b_norm, &b_norm, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    #if 1
     if(rank == 0) {
         b_norm = sqrt(b_norm);
     }
     MPI_Bcast(&b_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    #else
-    b_norm = sqrt(b_norm);
-    #endif
-    printf("перед матрикс мул\n");
+
     mul_matrix_on_vec(local_a, x, tmp1, n, size_of_block);
-    printf("перед вектор суб\n");
     vector_sub(local_b, tmp1, r, size_of_block);
 
     MPI_Allgather(r, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
 
     char match = 0;
-    printf("doshel do cikla\n");
     for(int i = 0; i < 10000; ++i) {
         mul_matrix_on_vec(local_a, z, tmp1, n, size_of_block);
 
@@ -147,22 +141,17 @@ int main(int argc, char** argv) {
         vector_sub(r, tmp2, r, size_of_block);
 
         double r_norm = 0;
-        double local_r_norm = scalar_mul(r, r, size_of_block);
-        MPI_Reduce(&local_r_norm, &r_norm, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        double new_scalar_of_r = 0;
+        double new_local_scalar_of_r = scalar_mul(r, r, size_of_block);
+        MPI_Reduce(&new_local_scalar_of_r, &new_scalar_of_r, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
         double condition = 0;
-        #if 1
         if(rank == 0) {
-            r_norm = sqrt(r_norm);
+            r_norm = sqrt(new_scalar_of_r);
+            //printf("r norm=%lf\n", r_norm);
             condition = r_norm / b_norm;
         }
         MPI_Bcast(&condition, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        #else
-        r_norm = sqrt(r_norm);
-        condition = r_norm / b_norm;
-        #endif
-        if(rank == 0) {
-            printf("r_next norm=%lf\n", r_norm);
-        }
 
         if(condition < e) {
             match++;
@@ -173,18 +162,22 @@ int main(int argc, char** argv) {
             }
         } else match = 0;
 
-        double new_local_tmp = scalar_mul(r, r ,size_of_block);
-        double new_tmp = 0;
-        MPI_Allreduce(&new_local_tmp, &new_tmp, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-        double beta = new_tmp / scalar_of_r;
+        double beta = new_scalar_of_r / scalar_of_r;
 
         mul_vec_on_scalar(z + size_of_block*rank, beta, tmp1, size_of_block);
-        vector_sum(r, tmp1, z + size_of_block*rank, n);
-        //MPI_Alltoall(x + size_of_block*rank, size_of_block, MPI_DOUBLE, x, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
-        //MPI_Alltoall(z + size_of_block*rank, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
-        //MPI_Allgather(x + size_of_block*rank, size_of_block, MPI_DOUBLE, x, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
-        //MPI_Allgather(z + size_of_block*rank, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
+        vector_sum(r, tmp1, z + size_of_block*rank, size_of_block);
+
+        //самый невероятный костыль
+        /*double* local_x = malloc(sizeof(double) * size_of_block);
+        double* local_z = malloc(sizeof(double) * size_of_block);
+        memcpy(local_x, x + size_of_block*rank, size_of_block * sizeof(double));
+        memcpy(local_z, z + size_of_block*rank, size_of_block * sizeof(double));
+        MPI_Allgather(local_x, size_of_block, MPI_DOUBLE, x, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Allgather(local_z, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
+        free(local_x);
+        free(local_z);*/
+        MPI_Allgather(x + size_of_block*rank, size_of_block, MPI_DOUBLE, x, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Allgather(z + size_of_block*rank, size_of_block, MPI_DOUBLE, z, size_of_block, MPI_DOUBLE, MPI_COMM_WORLD);
     }
 
     if(rank == 0) {
