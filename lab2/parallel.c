@@ -110,12 +110,9 @@ int main(int argc, char** argv) {
 
     double b_norm = 0;
     double local_b_norm = scalar_mul(local_b, local_b, size_of_block);
-    MPI_Reduce(&local_b_norm, &b_norm, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Allreduce(&local_b_norm, &b_norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-    if(rank == 0) {
-        b_norm = sqrt(b_norm);
-    }
-    MPI_Bcast(&b_norm, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    b_norm = sqrt(b_norm);
 
     mul_matrix_on_vec(local_a, x, tmp1, n, size_of_block);
     vector_sub(local_b, tmp1, r, size_of_block);
@@ -147,12 +144,9 @@ int main(int argc, char** argv) {
         MPI_Allreduce(&new_local_scalar_of_r, &new_scalar_of_r, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
         double condition = 0;
-        if(rank == 0) {
-            const double r_norm = sqrt(new_scalar_of_r);
-            //printf("r norm=%lf\n", r_norm);
-            condition = r_norm / b_norm;
-        }
-        MPI_Bcast(&condition, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        const double r_norm = sqrt(new_scalar_of_r);
+        //printf("r norm=%lf\n", r_norm);
+        condition = r_norm / b_norm;
 
         if(condition < e) {
             match++;

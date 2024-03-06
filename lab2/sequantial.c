@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
     const double start = MPI_Wtime();
     const double e = 0.00001;
-    const int n = 6144;
+    const int n = 11520;
 
     double* a = malloc(sizeof(double) * n * n);
     double* b = malloc(sizeof(double) * n);
@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
         mul_vec_on_scalar(tmp1, aplha, tmp2, n);
         vector_sub(r, tmp2, r, n);
 
-        printf("r_next norm=%lf\n", get_norm(r, n));
+        //printf("r_next norm=%lf\n", get_norm(r, n));
         double condition = get_norm(r, n) / b_norm;
         if(condition < e) {
             match++;
