@@ -28,7 +28,7 @@ void mul_vec_on_scalar(const double* vec, const double scalar, double* result, c
 
 void mul_matrix_on_vec(const double* matrix, const double* vec, double* result, const int n) {
     int j;
-#pragma omp for schedule(runtime)
+#pragma omp parallel for schedule(runtime)
     for(int i = 0; i < n; ++i) {
         result[i] = 0;
         for (j = 0; j < n; ++j) {
