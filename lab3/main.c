@@ -77,26 +77,8 @@ void filling(double* a, double* b, double* x, const int n) {
 }
 
 int main(int argc, char** argv) {
-    if(argc < 4) {
-        fprintf(stderr, "Usage: ./prog <num of proc> <type of schedule> <param for schedule>\n");
-        return 1;
-    }
-
     const double e = 0.00001;
     const int n = 6144;
-
-    int size = atoi(argv[1]);
-    omp_set_num_threads(size);
-    int param = atoi(argv[3]);
-
-    if(strcmp(argv[2], "static")) omp_set_schedule(omp_sched_static, param);
-    else if(strcmp(argv[2], "dynamic")) omp_set_schedule(omp_sched_dynamic, param);
-    else if(strcmp(argv[2], "guided")) omp_set_schedule(omp_sched_guided, param);
-    else {
-        fprintf(stderr, "wrong type\n");
-        return 1;
-    }
-
     double* a = malloc(sizeof(double) * n * n);
     double* b = malloc(sizeof(double) * n);
 
