@@ -113,7 +113,6 @@ int main(int argc, char** argv){
 
     if(rank == 0){
         cur_era[width + 1] = 1;
-        //cur_era[width*(number_of_rows + 1) + 1] = 1;
 
         cur_era[width * 2 + 2] = 1;
         cur_era[3 * width] = 1;
@@ -128,9 +127,6 @@ int main(int argc, char** argv){
     if(rank == 0){
         start = MPI_Wtime();
     }
-
-    //print(cur_era, width, height + 2);
-    //printf("--------------------------------\n");
 
     int i;
     for(i = 0; i < 10000; ++i){
@@ -170,8 +166,6 @@ int main(int argc, char** argv){
     }
 
     for (int j = 0; j < i + 1; ++j) {
-        //print(old_eras[j], width, height + 2);
-        //printf("--------------------------------\n");
         free(old_eras[j]);
     }
 
