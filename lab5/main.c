@@ -71,9 +71,10 @@ char compare(char* era1, char* era2, int size){
     return 1;
 }
 
-char check(char* cur_era, char** old_eras, int i, int width, int number_of_rows){
+char check(char* eras_check, char* cur_era, char** old_eras, int i, int width, int number_of_rows){
     for(int j = 0; j < i; ++j){
-        if(compare(&cur_era[width], &(old_eras[j])[width], width * number_of_rows)) return 1;
+        if(compare(&cur_era[width], &(old_eras[j])[width], width * number_of_rows)) eras_check[j] = 1;
+        else eras_check[j] = 0;
     }
     return 0;
 }
@@ -152,11 +153,14 @@ int main(int argc, char** argv){
         MPI_Wait(&r2, MPI_STATUS_IGNORE);
 
         old_eras[i] = cur_era;
-
-        char local_is_repeated = check(cur_era, old_eras, i, width, number_of_rows);
+        char eras_check[i];
         char is_repeated;
-        MPI_Allreduce(&local_is_repeated, &is_repeated, 1, MPI_CHAR, MPI_SUM, MPI_COMM_WORLD);
-        if(is_repeated == size) break;
+        check(eras_check, cur_era, old_eras, i, width, number_of_rows);
+        MPI_Allreduce(MPI_IN_PLACE, &eras_check, i, MPI_CHAR, MPI_LAND, MPI_COMM_WORLD);
+        for(int j = 0; j < i; ++j){
+            if(eras_check[j] == 1) is_repeated = 1;
+        }
+        if(is_repeated) break;
         cur_era = next_era;
     }
 
