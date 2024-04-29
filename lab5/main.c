@@ -158,7 +158,10 @@ int main(int argc, char** argv){
         check(eras_check, cur_era, old_eras, i, width, number_of_rows);
         MPI_Allreduce(MPI_IN_PLACE, &eras_check, i, MPI_CHAR, MPI_LAND, MPI_COMM_WORLD);
         for(int j = 0; j < i; ++j){
-            if(eras_check[j] == 1) is_repeated = 1;
+            if(eras_check[j] == 1) {
+                is_repeated = 1;
+                break;
+            }
         }
         if(is_repeated) break;
         cur_era = next_era;
