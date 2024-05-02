@@ -79,18 +79,6 @@ char check(char* eras_check, char* cur_era, char** old_eras, int i, int width, i
     return 0;
 }
 
-void print(char* era, int width, int height){
-    for(int i = 0; i < height; ++i){
-        for(int j = 0; j < width; ++j){
-            printf("%d ", era[i * width + j]);
-        }
-        printf("\n");
-    }
-}
-
-
-
-
 int main(int argc, char** argv){
     if(argc < 3){
         fprintf(stderr, "Usage: ./prog <width> <height>");
@@ -105,7 +93,7 @@ int main(int argc, char** argv){
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    char* old_eras[10000];
+    char* old_eras[5000];
 
     const int number_of_rows = height / size;
     const int size_of_block = width * (number_of_rows + 2);
@@ -130,10 +118,8 @@ int main(int argc, char** argv){
     }
 
 
-    char eras_check[10000];
-    char is_repeated;
     int i;
-    for(i = 0; i < 10000; ++i){
+    for(i = 0; i < 5000; ++i){
         char *next_era = calloc(size_of_block, sizeof(char));
         MPI_Request r1, r2, r3, r4;
 
@@ -155,6 +141,8 @@ int main(int argc, char** argv){
         MPI_Wait(&r1, MPI_STATUS_IGNORE);
         MPI_Wait(&r2, MPI_STATUS_IGNORE);
 
+        char eras_check[i];
+        char is_repeated;
         old_eras[i] = cur_era;
         check(eras_check, cur_era, old_eras, i, width, number_of_rows);
         MPI_Allreduce(MPI_IN_PLACE, &eras_check, i, MPI_CHAR, MPI_LAND, MPI_COMM_WORLD);
