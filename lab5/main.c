@@ -129,6 +129,9 @@ int main(int argc, char** argv){
         start = MPI_Wtime();
     }
 
+
+    char eras_check[10000];
+    char is_repeated;
     int i;
     for(i = 0; i < 10000; ++i){
         char *next_era = calloc(size_of_block, sizeof(char));
@@ -153,8 +156,6 @@ int main(int argc, char** argv){
         MPI_Wait(&r2, MPI_STATUS_IGNORE);
 
         old_eras[i] = cur_era;
-        char eras_check[i];
-        char is_repeated;
         check(eras_check, cur_era, old_eras, i, width, number_of_rows);
         MPI_Allreduce(MPI_IN_PLACE, &eras_check, i, MPI_CHAR, MPI_LAND, MPI_COMM_WORLD);
         for(int j = 0; j < i; ++j){
