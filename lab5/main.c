@@ -98,7 +98,7 @@ int main(int argc, char** argv){
     const int number_of_rows = height / size;
     const int size_of_block = width * (number_of_rows + 2);
 
-    char* cur_era = calloc(size_of_block, sizeof(char));
+    char* cur_era = (char*)calloc(size_of_block, sizeof(char));
 
     if(rank == 0){
         cur_era[width + 1] = 1;
@@ -120,7 +120,7 @@ int main(int argc, char** argv){
 
     int i;
     for(i = 0; i < 5000; ++i){
-        char *next_era = calloc(size_of_block, sizeof(char));
+        char *next_era = (char*)calloc(size_of_block, sizeof(char));
         MPI_Request r1, r2, r3, r4;
 
         MPI_Isend(&cur_era[width], width, MPI_CHAR, prev_process, 333, MPI_COMM_WORLD, &r1);
