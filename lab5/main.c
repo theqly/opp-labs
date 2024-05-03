@@ -64,19 +64,17 @@ void calc_bottom(char* cur_era, char* next_era, int width, int number_of_rows){
     }
 }
 
-char compare(char* era1, char* era2, int size){
+char compare_eras(char* era1, char* era2, int size){
     for(int i = 0; i < size; ++i){
         if(era1[i] != era2[i]) return 0;
     }
     return 1;
 }
 
-char check(char* eras_check, char* cur_era, char** old_eras, int i, int width, int number_of_rows){
+void comparing(char* eras_check, char* cur_era, char** old_eras, int i, int width, int number_of_rows){
     for(int j = 0; j < i; ++j){
-        if(compare(&cur_era[width], &(old_eras[j])[width], width * number_of_rows)) eras_check[j] = 1;
-        else eras_check[j] = 0;
+        eras_check[j] = compare_eras(&cur_era[width], &(old_eras[j])[width], width * number_of_rows);
     }
-    return 0;
 }
 
 int main(int argc, char** argv){
@@ -118,19 +116,33 @@ int main(int argc, char** argv){
     }
 
 
+
+    char eras_check[5000];
+    char is_repeated = 0;
+
     int i;
     for(i = 0; i < 5000; ++i){
         char *next_era = (char*)calloc(size_of_block, sizeof(char));
         MPI_Request r1, r2, r3, r4;
 
-        MPI_Isend(&cur_era[width], width, MPI_CHAR, prev_process, 333, MPI_COMM_WORLD, &r1);
-        MPI_Isend(&cur_era[width * number_of_rows], width, MPI_CHAR, next_process, 444, MPI_COMM_WORLD, &r2);
-
         MPI_Irecv(cur_era, width, MPI_CHAR, prev_process, 444, MPI_COMM_WORLD, &r3);
         MPI_Irecv(&cur_era[width * (number_of_rows + 1)], width, MPI_CHAR, next_process, 333, MPI_COMM_WORLD, &r4);
 
+        MPI_Isend(&cur_era[width], width, MPI_CHAR, prev_process, 333, MPI_COMM_WORLD, &r1);
+        MPI_Isend(&cur_era[width * number_of_rows], width, MPI_CHAR, next_process, 444, MPI_COMM_WORLD, &r2);
+
         calc_inner(cur_era, next_era, width, number_of_rows);
 
+        int top_received = 0, bottom_received = 0;
+        while(1){
+            if(!top_received){
+                MPI_Test(&r3, &top_received, MPI_STATUS_IGNORE);
+                if(top_received) calc_top(cur_era, next_era, width);
+            }else if(!bottom_received){
+                MPI_Test(&r4, &bottom_received, MPI_STATUS_IGNORE);
+                if(bottom_received) calc_bottom(cur_era, next_era, width, number_of_rows);
+            } else break;
+        }
 
         MPI_Wait(&r3, MPI_STATUS_IGNORE);
         calc_top(cur_era, next_era, width);
@@ -141,10 +153,8 @@ int main(int argc, char** argv){
         MPI_Wait(&r1, MPI_STATUS_IGNORE);
         MPI_Wait(&r2, MPI_STATUS_IGNORE);
 
-        char eras_check[i];
-        char is_repeated;
         old_eras[i] = cur_era;
-        check(eras_check, cur_era, old_eras, i, width, number_of_rows);
+        comparing(eras_check, cur_era, old_eras, i, width, number_of_rows);
         MPI_Allreduce(MPI_IN_PLACE, &eras_check, i, MPI_CHAR, MPI_LAND, MPI_COMM_WORLD);
         for(int j = 0; j < i; ++j){
             if(eras_check[j] == 1) {
@@ -161,7 +171,7 @@ int main(int argc, char** argv){
         printf("Time taken: %lf sec.\n", MPI_Wtime() - start);
     }
 
-    for (int j = 0; j < i + 1; ++j) {
+    for (int j = 0; j <= i; ++j) {
         free(old_eras[j]);
     }
 
