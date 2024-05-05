@@ -97,25 +97,20 @@ int main(int argc, char** argv){
     const int size_of_block = width * (number_of_rows + 2);
 
     char* cur_era = (char*)calloc(size_of_block, sizeof(char));
-
-    if(rank == 0){
-        cur_era[width + 1] = 1;
-
-        cur_era[width * 2 + 2] = 1;
-        cur_era[3 * width] = 1;
-        cur_era[3 * width + 1] = 1;
-        cur_era[3 * width + 2] = 1;
-    }
-
-    int prev_process = (rank - 1 + size) % size;
-    int next_process = (rank + 1) % size;
-
+    char* start_era;
     double start;
     if(rank == 0){
+        start_era = (char*)calloc(width*height, sizeof(char));
+        start_era[width + 1] = 1;
+        start_era[width * 2 + 2] = 1;
+        start_era[3 * width] = 1;
+        start_era[3 * width + 1] = 1;
+        start_era[3 * width + 2] = 1;
         start = MPI_Wtime();
     }
-
-
+    MPI_Scatter(start_era, number_of_rows * width, MPI_CHAR, cur_era + width, number_of_rows * width, MPI_CHAR, 0, MPI_COMM_WORLD);
+    int prev_process = (rank - 1 + size) % size;
+    int next_process = (rank + 1) % size;
 
     char eras_check[5000];
     char is_repeated = 0;
