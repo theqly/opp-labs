@@ -144,15 +144,6 @@ int main(int argc, char** argv){
             } else break;
         }
 
-        MPI_Wait(&r3, MPI_STATUS_IGNORE);
-        calc_top(cur_era, next_era, width);
-
-        MPI_Wait(&r4, MPI_STATUS_IGNORE);
-        calc_bottom(cur_era, next_era, width, number_of_rows);
-
-        MPI_Wait(&r1, MPI_STATUS_IGNORE);
-        MPI_Wait(&r2, MPI_STATUS_IGNORE);
-
         old_eras[i] = cur_era;
         comparing(eras_check, cur_era, old_eras, i, width, number_of_rows);
         MPI_Allreduce(MPI_IN_PLACE, &eras_check, i, MPI_CHAR, MPI_LAND, MPI_COMM_WORLD);
