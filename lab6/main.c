@@ -50,7 +50,7 @@ void* worker_func(void* void_data){
     double min_time, max_time;
     double disbalance, dolya_disbalace;
 
-    for(int i = 0; i < 12; i++){
+    for(int i = 0; i < 8; i++){
         pthread_mutex_lock(&data->mutex);
         filling(data, i);
         data->tasks_done = 0;
@@ -144,7 +144,7 @@ int main(int argc, char** argv){
         pthread_mutex_lock(&data->mutex);
         int tasks_remained = data->tasks_to_do - data->tasks_done;
         pthread_mutex_unlock(&data->mutex);
-        int tasks_to_send = tasks_remained / (data->size * 2);
+        int tasks_to_send = tasks_remained / (data->size - 1);
         if(tasks_remained >= 1 && tasks_to_send >= 1){
             pthread_mutex_lock(&data->mutex);
             data->tasks_to_do -= tasks_to_send;
